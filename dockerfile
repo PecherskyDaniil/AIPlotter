@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+# Устанавливаем системные зависимости для vosk (если нужно)
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -10,14 +11,16 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-COPY requirements.txt .
+# Копируем ВСЮ папку app в контейнер
+COPY ./app/ .
 
+# Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
 
 EXPOSE 8000
 
+# Запускаем генерацию конфига и приложение
 CMD ["uvicorn", "main:fastapi_app", "--host", "0.0.0.0", "--port", "8000"]

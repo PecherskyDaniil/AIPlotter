@@ -1,11 +1,22 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
+  fastapi-app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app
     environment:
       - ENVIRONMENT=development
+      - IMAGE_DIRECTORY=/app/images
+      - UPLOAD_DIR=uploads
+      - SUPERSET_HOST=host.docker.internal
+      - SUPERSET_PORT=8088
+      - SUPERSET_USERNAME=AIPlotter
+      - SUPERSET_PASSWORD=secret123
+    command: >
+      sh -c "python generate_config.py && 
+             uvicorn main:fastapi_app --host 0.0.0.0 --port 8000 --reload"
