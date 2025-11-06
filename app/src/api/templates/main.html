@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Plotter с Голосовым Вводом</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        select {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        .buttons-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .process-btn {
+            background: #4CAF50;
+            color: white;
+            flex: 1;
+        }
+
+        .process-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .record-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ff4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 12px;
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .record-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.6);
+        }
+
+        .record-btn.recording {
+            background: #4444ff;
+            box-shadow: 0 4px 15px rgba(68, 68, 255, 0.4);
+            animation: pulse 1.5s infinite;
+        }
+
+        .record-btn.recording:hover {
+            box-shadow: 0 6px 20px rgba(68, 68, 255, 0.6);
+        }
+
+        .record-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .status {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            text-align: left;
+        }
+
+        .ready {
+            background-color: #e8f5e8;
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
+
+        .recording-status {
+            background-color: #ffebee;
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+
+        .processing {
+            background-color: #e3f2fd;
+            border-color: #1976d2;
+            color: #1976d2;
+        }
+
+        .success {
+            background-color: #e8f5e8;
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
+
+        .error {
+            background-color: #ffebee;
+            border-color: #d32f2f;
+            color: #d32f2f;
+        }
+
+        .result-section {
+            margin: 25px 0;
+        }
+
+        .text-result {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 15px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #2196f3;
+            min-height: 40px;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin: 15px 0;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 6px 12px;
+            margin: 5px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #1976d2;
+        }
+
+        .url-result {
+            margin: 15px 0;
+            padding: 15px;
+            background: #e8f5e8;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .url-result a {
+            color: #2196f3;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .url-result a:hover {
+            text-decoration: underline;
+        }
+
+        .timer {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(68, 68, 255, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(68, 68, 255, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(68, 68, 255, 0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>AI Plotter с Голосовым Вводом</h1>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="inputData" placeholder="Введите запрос или используйте голосовой ввод...">
+                <button id="recordBtn" class="record-btn" title="Голосовой ввод">
+                    <span class="record-icon">🎤</span>
+                    <span>Запись</span>
+                </button>
+            </div>
+
+            <div id="timer" class="timer hidden">00:00</div>
+
+            <div class="input-group">
+                <select name="type">
+                    <option value="charts">Chart</option>
+                    <option value="dashboards">Dashboard</option>
+                </select>
+                <button class="process-btn" onclick="process()">Создать Визуализацию</button>
+            </div>
+        </div>
+
+        <div id="status" class="status ready">
+            <strong>Готов к записи</strong><br>
+            Нажмите кнопку микрофона для голосового ввода
+        </div>
+
+        <audio id="audioPlayer" class="audio-player" controls style="display: none;"></audio>
+
+        <div id="speechResult" class="result-section" style="display: none;">
+            <h3>🎤 Распознанный текст:</h3>
+            <div id="recognizedText" class="text-result">
+                Идет обработка...
+            </div>
+            <div id="recognitionInfo"></div>
+        </div>
+
+        <div id="plotterResult" class="result-section"></div>
+    </div>
+
+    <script>
+        // Конфигурационные параметры из сервера
+        const config = {
+            baseUrl: "{{ base_url }}"
+        };
+
+        class SpeechRecognitionApp {
+            constructor() {
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.isRecording = false;
+                this.recordingTimer = null;
+                this.recordingStartTime = null;
+
+                this.initializeElements();
+                this.initializeEventListeners();
+                //this.checkBackendStatus();
+            }
+
+            initializeElements() {
+                this.recordBtn = document.getElementById('recordBtn');
+                this.inputData = document.getElementById('inputData');
+                this.timer = document.getElementById('timer');
+                this.status = document.getElementById('status');
+                this.audioPlayer = document.getElementById('audioPlayer');
+                this.speechResult = document.getElementById('speechResult');
+                this.recognizedText = document.getElementById('recognizedText');
+                this.recognitionInfo = document.getElementById('recognitionInfo');
+                this.plotterResult = document.getElementById('plotterResult');
+            }
+
+            async initializeEventListeners() {
+                this.recordBtn.addEventListener('click', () => this.toggleRecording());
+                await this.checkMicrophonePermission();
+            }
+
+            async checkBackendStatus() {
+                try {
+                    const response = await fetch('/recognition-status/');
+                    const status = await response.json();
+
+                    if (status.status !== 'active') {
+                        this.updateStatus('❌ Голосовой ввод временно недоступен', 'error');
+                        this.recordBtn.disabled = true;
+                    }
+                } catch (error) {
+                    this.updateStatus('⚠️ Голосовой ввод не доступен', 'error');
+                }
+            }
+
+            async checkMicrophonePermission() {
+                try {
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
+                } catch (error) {
+                    this.updateStatus('❌ Нет доступа к микрофону. Разрешите доступ к микрофону в настройках браузера.', 'error');
+                    this.recordBtn.disabled = true;
+                }
+            }
+
+            async toggleRecording() {
+                if (this.isRecording) {
+                    await this.stopRecording();
+                } else {
+                    await this.startRecording();
+                }
+            }
+
+            async startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            channelCount: 1,
+                            sampleRate: 16000,
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        }
+                    });
+
+                    this.mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'audio/webm;codecs=opus'
+                    });
+
+                    this.audioChunks = [];
+
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            this.audioChunks.push(event.data);
+                        }
+                    };
+
+                    this.mediaRecorder.onstop = () => {
+                        this.processRecording();
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    this.mediaRecorder.start(1000);
+                    this.isRecording = true;
+
+                    // Обновляем UI
+                    this.recordBtn.classList.add('recording');
+                    this.recordBtn.innerHTML = '<span class="record-icon">⏹️</span><span>Стоп</span>';
+                    this.timer.classList.remove('hidden');
+
+                    // Очищаем предыдущие результаты
+                    this.plotterResult.innerHTML = '';
+
+                    // Запускаем таймер
+                    this.startTimer();
+
+                    this.updateStatus('🔴 Запись... Говорите ваш запрос для визуализации', 'recording-status');
+
+                } catch (error) {
+                    this.updateStatus('Ошибка начала записи: ' + error.message, 'error');
+                }
+            }
+
+            async stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+
+                    // Останавливаем таймер
+                    this.stopTimer();
+
+                    // Обновляем UI
+                    this.recordBtn.classList.remove('recording');
+                    this.recordBtn.innerHTML = '<span class="record-icon">🎤</span><span>Запись</span>';
+                    this.recordBtn.disabled = true;
+
+                    this.updateStatus('⏳ Обработка записи...', 'processing');
+                }
+            }
+
+            startTimer() {
+                this.recordingStartTime = Date.now();
+                this.recordingTimer = setInterval(() => {
+                    const elapsed = Date.now() - this.recordingStartTime;
+                    const seconds = Math.floor(elapsed / 1000);
+                    const minutes = Math.floor(seconds / 60);
+                    const displaySeconds = seconds % 60;
+                    this.timer.textContent = `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.recordingTimer) {
+                    clearInterval(this.recordingTimer);
+                    this.recordingTimer = null;
+                }
+                this.timer.classList.add('hidden');
+            }
+
+            processRecording() {
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+
+                // Воспроизводим записанное аудио
+                const audioUrl = URL.createObjectURL(audioBlob);
+                this.audioPlayer.src = audioUrl;
+                this.audioPlayer.style.display = 'block';
+
+                // Показываем результат распознавания
+                this.speechResult.style.display = 'block';
+                this.recognizedText.textContent = 'Идет распознавание...';
+
+                // Отправляем на распознавание
+                this.recognizeSpeech(audioBlob);
+            }
+
+            async recognizeSpeech(audioBlob) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', audioBlob);
+
+                    const response = await fetch('/main/recognize', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Ошибка сервера: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    this.displayRecognitionResult(result);
+
+                } catch (error) {
+                    this.updateStatus('❌ Ошибка распознавания: ' + error.message, 'error');
+                    this.recognizedText.textContent = 'Произошла ошибка при распознавании речи.';
+                    console.error('Recognition error:', error);
+                } finally {
+                    // Включаем кнопку обратно
+                    this.recordBtn.disabled = false;
+                }
+            }
+
+            displayRecognitionResult(result) {
+                if (result.status === 'success' && result.text) {
+                    const recognizedText = result.text;
+                    this.recognizedText.textContent = recognizedText;
+
+                    // ЗАПИСЫВАЕМ РАСПОЗНАННЫЙ ТЕКСТ В ПОЛЕ ВВОДА
+                    this.inputData.value = recognizedText;
+
+                    this.updateStatus('✅ Текст распознан и записан в поле ввода', 'success');
+
+                    this.recognitionInfo.innerHTML = `
+                        <div class="info-item">
+                            📊 Размер: ${Math.round(result.file_size / 1024)} KB
+                        </div>
+                        <div class="info-item">
+                            ⚡ Распознаватель: ${result.recognizer || 'Vosk'}
+                        </div>
+                    `;
+
+                    // Автоматически фокусируемся на поле ввода для возможного редактирования
+                    this.inputData.focus();
+
+                } else {
+                    this.recognizedText.textContent = 'Речь не распознана. Попробуйте говорить четче и громче.';
+                    this.updateStatus('⚠️ Речь не распознана', 'error');
+                }
+            }
+
+            updateStatus(message, type = 'ready') {
+                this.status.innerHTML = message;
+                this.status.className = `status ${type}`;
+            }
+        }
+
+        // Функция для создания визуализации
+        async function process() {
+            const input = document.getElementById('inputData').value;
+            const type = document.querySelector('select[name="type"]').value;
+            const plotterResult = document.getElementById('plotterResult');
+
+            if (!input.trim()) {
+                plotterResult.innerHTML = '<div class="status error">Введите запрос для создания визуализации</div>';
+                return;
+            }
+
+            plotterResult.innerHTML = '<div class="status processing">Создание визуализации...</div>';
+
+            try {
+                const response = await fetch('/' + type + '/create/text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: input })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    // Формируем ссылку на основе конфига
+                    let url = config.baseUrl;
+                    if (type === 'charts') {
+                        url += "/explore?slice_id=";
+                    } else {
+                        url += "/superset/dashboard/";
+                    }
+                    url += result.result["id"];
+
+                    plotterResult.innerHTML = `
+                        <div class="url-result">
+                            <strong>✅ Визуализация создана успешно!</strong><br>
+                            <a href="${url}" target="_blank">${url}</a>
+                        </div>
+                    `;
+                } else {
+                    plotterResult.innerHTML = `
+                        <div class="status error">
+                            Ошибка: ${result.detail || 'Неизвестная ошибка'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                plotterResult.innerHTML = `
+                    <div class="status error">
+                        Ошибка сети: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            new SpeechRecognitionApp();
+        });
+    </script>
+</body>
+
+</html>
