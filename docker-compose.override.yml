@@ -1,0 +1,11 @@
+
+services:
+  fastapi-app:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
