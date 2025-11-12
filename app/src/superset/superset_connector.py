@@ -95,6 +95,16 @@ class SupersetConnector:
     def session(self,value:requests.session):
         self.__session=value
 
+
+    def check_token(self):
+        get_url=f"http://{self.host}:{self.port}/api/v1/chart"
+        headers = {'Authorization': f'Bearer {self.access_token}'}
+        response=self.session.get(get_url,headers=headers)
+        if response.status_code//100!=2 and response.json()["msg"]=="Token has expired":
+            return self.authorize()
+        return True
+        
+
     def authorize(self):
         
         payload={
@@ -127,6 +137,7 @@ class SupersetConnector:
     
 
     def get_tables_list(self,update=False):
+        self.check_token()
         if self.__cache_tables is None or update:
             get_tables_url=f"http://{self.host}:{self.port}/api/v1/dataset/?q=%7B%0A%20%20%22page_size%22%3A%2010000000%0A%7D"
             headers = {'Authorization': f'Bearer {self.access_token}'}
@@ -147,6 +158,7 @@ class SupersetConnector:
 
     def create_dataset(self,sql_query,table_names:list[str]=None):#''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
         validator.validate_sql_injections(sql_query)
+        self.check_token()
         schema=None
         database=None
         if table_names is None:
@@ -195,6 +207,7 @@ class SupersetConnector:
         return response
 
     def create_chart(self,chart_obj:dict):
+        self.check_token()
         create_chart_url=f"http://{self.host}:{self.port}/api/v1/chart"
         headers = {"Authorization": f"Bearer {self.access_token}",'Accept': 'application/json','X-CSRFToken': self.csrf_token,"Referer":f"{self.host}:{self.port}/api/v1/security/csrf_token/"}
         payload=chart_obj
@@ -206,6 +219,7 @@ class SupersetConnector:
         return response
 
     def create_dashboard(self,dashboard_obj:dict):
+        self.check_token()
         create_dashboard_url=f"http://{self.host}:{self.port}/api/v1/dashboard"
         headers = {"Authorization": f"Bearer {self.access_token}",'Accept': 'application/json','X-CSRFToken': self.csrf_token,"Referer":f"{self.host}:{self.port}/api/v1/security/csrf_token/"}
         payload=dashboard_obj
