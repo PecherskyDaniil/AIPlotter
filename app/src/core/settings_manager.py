@@ -45,10 +45,12 @@ class SettingsManager():
             self.settings.superset_password=config["Superset"]["password"]
             self.settings.image_directory=config["DEFAULT"]["image_directory"]
             self.settings.upload_dir=config["DEFAULT"]["upload_dir"]
+            self.settings.object_expire_time=float(config["Superset"]["object_expire_time"])
+            self.settings.clean_time_minutes=float(config["Superset"]["clean_time"])
             self.logger.info("Data successfuly loaded from config file")
             return True
         except Exception as e:
-            self.logger.error(f"Error while trying to fetc config file {e}")
+            self.logger.error(f"Error while trying to fetch config file {e}")
             return False
         
         

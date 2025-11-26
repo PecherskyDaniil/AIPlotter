@@ -4,9 +4,14 @@ from ..models.settings_model import SettingsModel
 from ..superset.superset_connector import SupersetConnector
 from .logger import get_logger
 import os
+import uuid
+import datetime
+
 class App:
     __connector:SupersetConnector
     __upload_dir:str=None
+    __object_expire_time:datetime.timedelta=None
+    __clean_time_minutes:float=None
     def __init__(self):
         self.connector=SupersetConnector()
         self.logger=get_logger("AIPlotApp")
@@ -39,6 +44,24 @@ class App:
         self.__connector=value
 
 
+    @property
+    def object_expire_time(self)->datetime.timedelta:
+        return self.__object_expire_time
+    
+    @object_expire_time.setter
+    def object_expire_time(self,value:datetime.timedelta):
+        validator.validate_object_type(value,datetime.timedelta)
+        self.__object_expire_time=value
+
+    @property
+    def clean_time_minutes(self):
+        return self.__clean_time_minutes
+
+    @clean_time_minutes.setter
+    def clean_time_minutes(self,value):
+        validator.validate_object_type(value,float)
+        self.__clean_time_minutes=value
+
     def load_from_settings(self,settings:SettingsModel):
         try:
             self.connector.host=settings.superset_host
@@ -46,6 +69,8 @@ class App:
             self.connector.username=settings.superset_username
             self.connector.password=settings.superset_password
             self.upload_dir=settings.upload_dir
+            self.object_expire_time=datetime.timedelta(minutes=settings.object_expire_time)
+            self.clean_time_minutes=settings.clean_time_minutes
             self.logger.info("Settings succsessfully loaded to app")
             return True
         except Exception as e:

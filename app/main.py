@@ -3,10 +3,13 @@ from src.core.settings_manager import SettingsManager
 from src.ai.ai_script import ai_parse
 from src.models.dashboard_model import DashboardModel
 
-from fastapi import FastAPI,Request
+from fastapi import FastAPI,Request,BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
+
+import asyncio
+from contextlib import asynccontextmanager
 
 from src.api import chart_router
 from src.api import dashboard_router
@@ -19,8 +22,29 @@ main_app=App()
 main_app.load_from_settings(settings=settings_manager.settings)
 main_app.start()
 
-fastapi_app=FastAPI()
+async def cleaning_task():
+    while True:
+        main_app.connector.clean_from_objects(main_app.object_expire_time)
+        await asyncio.sleep(main_app.clean_time_minutes*60)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    task = asyncio.create_task(cleaning_task())
+    yield
+    # Shutdown
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+fastapi_app=FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="src/api/templates")
+
+
+
+
 
 @fastapi_app.get('/', response_class=HTMLResponse)
 async def index(request: Request):

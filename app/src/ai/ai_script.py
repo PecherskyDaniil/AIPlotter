@@ -235,7 +235,7 @@ ai_results={
         }
 }
 
-def ai_parse(prompt:str):
+def ai_parse(prompt:str,type="dashboard"):
     if prompt in ai_results.keys():
         return ai_results[prompt]
     else:

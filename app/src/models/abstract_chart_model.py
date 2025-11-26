@@ -1,5 +1,6 @@
 
 from ..core.validator import validator
+from ..core.create_name import create_name
 import random
 import string
 from .datasource_model import DatasourceModel
@@ -25,7 +26,7 @@ class AbstractChartModel:
     __chart_id: int = None
 
     def __init__(self):
-        self.name=uuid.uuid4().hex
+        self.name=create_name()
         self.viz_type=None
         self.datasource=None
         self.filters=[]

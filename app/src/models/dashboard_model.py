@@ -1,5 +1,6 @@
 
 from ..core.validator import validator
+from ..core.create_name import create_name
 import random
 import string
 
@@ -8,12 +9,12 @@ from .chart_factory import ChartFactory
 import json
 import uuid
 class DashboardModel:
-    __name: str = uuid.uuid4().hex#''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
+    __name: str = create_name()#''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
     __charts: list[AbstractChartModel] = []
 
 
     def __init__(self):
-        self.name=uuid.uuid4().hex
+        self.name=create_name()
         self.charts=[]
     @property
     def name(self) -> str:
@@ -39,7 +40,7 @@ class DashboardModel:
     def from_model_dict(self,dict_obj:dict,datasource_obj:dict):
         chart_factory_instance=ChartFactory()
         if "name" in dict_obj.keys() and dict_obj["name"] is not None:
-            self.name=dict_obj["name"]
+            self.name="ai_plotter-"+dict_obj["name"]
         for chart_obj in dict_obj["charts"]:
             self.charts.append(chart_factory_instance.create(chart_obj,datasource_obj))
 

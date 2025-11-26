@@ -1,5 +1,5 @@
 from ..core.validator import validator
-
+import datetime
 class SettingsModel:
     __superset_host: str = None
     __superset_port: int = None
@@ -7,6 +7,8 @@ class SettingsModel:
     __superset_password: str = None
     __image_directory: str = ""
     __upload_dir:str=None
+    __object_expire_time:float=None
+    __clean_time_minutes:float=None
     def __init__(self):
         self.superset_host=None
         self.superset_port=None
@@ -67,3 +69,21 @@ class SettingsModel:
     def image_directory(self, value: str):
         validator.validate_object_type(value, str)
         self.__image_directory = value
+
+    @property
+    def object_expire_time(self)->float:
+        return self.__object_expire_time
+    
+    @object_expire_time.setter
+    def object_expire_time(self,value:float):
+        validator.validate_object_type(value,float)
+        self.__object_expire_time=value
+    
+    @property
+    def clean_time_minutes(self):
+        return self.__clean_time_minutes
+
+    @clean_time_minutes.setter
+    def clean_time_minutes(self,value):
+        validator.validate_object_type(value,float)
+        self.__clean_time_minutes=value
