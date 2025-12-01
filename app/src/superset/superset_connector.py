@@ -283,7 +283,7 @@ class SupersetConnector:
         response=self.session.get(get_url,headers=headers).json()
         for obj in response["result"]:
             #print(datetime.datetime.now()-datetime.datetime.strptime(chart_obj["changed_on_utc"],"%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None))
-            if (datetime.datetime.now()-datetime.datetime.strptime(obj["changed_on_utc"],"%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)).total_seconds()>expire_time.total_seconds():
+            if (datetime.datetime.now()-datetime.datetime.strptime(obj["changed_on_utc"],"%Y-%m-%dT%H:%M:%S.%f%z").replace(tzinfo=None)).total_seconds()>expire_time.total_seconds() and not(obj["published"]):
                 result=self.session.delete(delete_base_url+str(obj["id"]),headers=headers)
                 if result.status_code//100!=2:
                     self.logger.error(f"Cant delete object by url {delete_base_url+str(obj['id'])}")
