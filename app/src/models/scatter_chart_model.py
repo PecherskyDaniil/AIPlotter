@@ -107,6 +107,7 @@ class ScatterChartModel(AbstractChartModel):
         adhoc_filters=[]
         for filter_obj in self.filters:
             adhoc_filters.append(filter_obj.to_json())
+        params["adhoc_filters"]=adhoc_filters
         group_by=[]
         for group_obj in self.group_by:
             group_by.append(group_obj)

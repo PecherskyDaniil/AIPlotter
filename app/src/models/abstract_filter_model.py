@@ -5,7 +5,7 @@ from enum import Enum
 class Operator(Enum):
     IN="IN"
     NOT_IN="NOT IN"
-    EQ="="
+    EQ="=="
     TIME_RANGE="TEMPORAL_RANGE"
 
 class AbstractFilterModel:
