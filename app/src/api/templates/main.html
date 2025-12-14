@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Plotter с Голосовым Вводом</title>
+    <title>Прототип AI Plotter с Голосовым Вводом</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -214,8 +214,196 @@
             font-family: monospace;
         }
 
+        .details-btn {
+            background: #2196f3;
+            color: white;
+            margin: 10px 0;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .details-btn:hover {
+            background: #1976d2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        .details-btn .icon {
+            transition: transform 0.3s ease;
+        }
+
+        .details-btn.expanded .icon {
+            transform: rotate(180deg);
+        }
+
+        .details-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .details-section.expanded {
+            display: block;
+        }
+
+        .sql-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .sql-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sql-code {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .data-section {
+            margin-top: 20px;
+        }
+
+        .data-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            margin-top: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+            /* Минимальная ширина для небольших таблиц */
+        }
+
+        .data-table th {
+            background: #2196f3;
+            color: white;
+            font-weight: bold;
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 2px solid #1976d2;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            vertical-align: top;
+            min-width: 100px;
+            /* Минимальная ширина ячейки */
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .no-data {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #ccc;
+        }
+
         .hidden {
             display: none;
+        }
+
+        /* Стили для скроллбара */
+        .data-table-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        .data-table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .data-table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .data-table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .sql-code::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .sql-code::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .sql-code::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .sql-code::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         @keyframes pulse {
@@ -231,12 +419,24 @@
                 box-shadow: 0 0 0 0 rgba(68, 68, 255, 0);
             }
         }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>AI Plotter с Голосовым Вводом</h1>
+        <h1>Прототип</h1>
 
         <div class="input-section">
             <div class="input-group">
@@ -274,6 +474,25 @@
         </div>
 
         <div id="plotterResult" class="result-section"></div>
+
+        <!-- Секция с подробностями (изначально скрыта) -->
+        <div id="detailsSection" class="details-section">
+            <div class="sql-section">
+                <div class="sql-title">
+                    <span>📝 Сгенерированный SQL запрос:</span>
+                </div>
+                <pre id="sqlCode" class="sql-code">SQL запрос появится здесь...</pre>
+            </div>
+
+            <div class="data-section">
+                <div class="data-title">
+                    <span>📊 Результаты запроса:</span>
+                </div>
+                <div id="dataTableContainer" class="data-table-container">
+                    <!-- Таблица будет вставлена сюда -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -305,6 +524,9 @@
                 this.recognizedText = document.getElementById('recognizedText');
                 this.recognitionInfo = document.getElementById('recognitionInfo');
                 this.plotterResult = document.getElementById('plotterResult');
+                this.detailsSection = document.getElementById('detailsSection');
+                this.sqlCode = document.getElementById('sqlCode');
+                this.dataTableContainer = document.getElementById('dataTableContainer');
             }
 
             async initializeEventListeners() {
@@ -503,6 +725,79 @@
                 this.status.innerHTML = message;
                 this.status.className = `status ${type}`;
             }
+
+            // Новый метод для отображения деталей результата
+            displayDetails(result) {
+                // Отображаем SQL запрос
+                this.sqlCode.textContent = result.sql || 'SQL запрос не сгенерирован';
+
+                // Отображаем таблицу с данными
+                this.displayDataTable(result.data || []);
+            }
+
+            displayDataTable(data) {
+                if (!data || data.length === 0) {
+                    this.dataTableContainer.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+                    return;
+                }
+
+                // Получаем все уникальные ключи из объектов данных
+                const keys = Array.from(
+                    new Set(data.flatMap(item => Object.keys(item)))
+                );
+
+                // Создаем таблицу
+                let tableHTML = '<table class="data-table">';
+
+                // Заголовки таблицы
+                tableHTML += '<thead><tr>';
+                keys.forEach(key => {
+                    tableHTML += `<th>${this.formatColumnName(key)}</th>`;
+                });
+                tableHTML += '</tr></thead>';
+
+                // Данные таблицы
+                tableHTML += '<tbody>';
+                data.forEach(item => {
+                    tableHTML += '<tr>';
+                    keys.forEach(key => {
+                        const value = item[key] !== undefined ? item[key] : '';
+                        // Форматируем значения для лучшего отображения
+                        const formattedValue = this.formatCellValue(value);
+                        tableHTML += `<td>${formattedValue}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                });
+                tableHTML += '</tbody></table>';
+
+                this.dataTableContainer.innerHTML = tableHTML;
+            }
+
+            formatColumnName(name) {
+                // Форматируем имя колонки для лучшего отображения
+                return name
+                    .replace(/_/g, ' ')
+                    .replace(/([A-Z])/g, ' $1')
+                    .replace(/^./, str => str.toUpperCase())
+                    .trim();
+            }
+
+            formatCellValue(value) {
+                if (value === null || value === undefined) {
+                    return '<span style="color: #999; font-style: italic;">null</span>';
+                }
+
+                if (typeof value === 'object') {
+                    return JSON.stringify(value);
+                }
+
+                // Если это число с плавающей точкой, округляем до 2 знаков
+                if (typeof value === 'number' && !Number.isInteger(value)) {
+                    return value.toFixed(2);
+                }
+
+                return String(value);
+            }
         }
 
         // Функция для создания визуализации
@@ -510,11 +805,16 @@
             const input = document.getElementById('inputData').value;
             const type = document.querySelector('select[name="type"]').value;
             const plotterResult = document.getElementById('plotterResult');
+            const detailsSection = document.getElementById('detailsSection');
+            const speechRecognitionApp = window.speechRecognitionApp;
 
             if (!input.trim()) {
                 plotterResult.innerHTML = '<div class="status error">Введите запрос для создания визуализации</div>';
                 return;
             }
+
+            // Скрываем детали при новом запросе
+            detailsSection.classList.remove('expanded');
 
             plotterResult.innerHTML = '<div class="status processing">Создание визуализации...</div>';
 
@@ -536,12 +836,34 @@
                     }
                     url += result.result["id"];
 
+                    // Основная информация о визуализации
                     plotterResult.innerHTML = `
                         <div class="url-result">
                             <strong>✅ Визуализация создана успешно!</strong><br>
                             <a href="${url}" target="_blank">${url}</a>
                         </div>
+                        <button id="showDetailsBtn" class="details-btn">
+                            <span class="icon">▼</span>
+                            <span>Подробнее</span>
+                        </button>
                     `;
+
+                    // Отображаем детали (SQL и данные)
+                    if (speechRecognitionApp) {
+                        speechRecognitionApp.displayDetails(result.result);
+                    }
+
+                    // Добавляем обработчик для кнопки "Подробнее"
+                    const showDetailsBtn = document.getElementById('showDetailsBtn');
+                    showDetailsBtn.addEventListener('click', () => {
+                        detailsSection.classList.toggle('expanded');
+                        showDetailsBtn.classList.toggle('expanded');
+                        showDetailsBtn.querySelector('.icon').textContent =
+                            detailsSection.classList.contains('expanded') ? '▲' : '▼';
+                        showDetailsBtn.querySelector('span:last-child').textContent =
+                            detailsSection.classList.contains('expanded') ? 'Скрыть детали' : 'Подробнее';
+                    });
+
                 } else {
                     plotterResult.innerHTML = `
                         <div class="status error">
@@ -560,7 +882,7 @@
 
         // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
-            new SpeechRecognitionApp();
+            window.speechRecognitionApp = new SpeechRecognitionApp();
         });
     </script>
 </body>

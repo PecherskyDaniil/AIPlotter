@@ -292,6 +292,18 @@ class SupersetConnector:
                     self.logger.info(f"Successfully deleted object by url {delete_base_url+str(obj['id'])}")
         return error_count
             
+    def execute_sql_query(self,query:str,database_id:int)->dict:
+        self.check_token()
+        url=f"http://{self.host}:{self.port}/api/v1/sqllab/execute"
+        headers = {"Authorization": f"Bearer {self.access_token}",'Accept': 'application/json','X-CSRFToken': self.csrf_token,"Referer":f"{self.host}:{self.port}/api/v1/security/csrf_token/"}
+        payload={"sql":query,"database_id":database_id,"queryLimit": 10}
+        response=self.session.post(url,headers=headers,json=payload)
+        if response.status_code//100!=2:
+            self.logger.error(f"Cant execute this sql query {query} because of {response.content}")
+            return False
+        
+        self.logger.info(f"Sql query executed succesfully")
+        return response.json()
 
 
 

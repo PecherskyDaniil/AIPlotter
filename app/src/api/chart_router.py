@@ -15,13 +15,18 @@ async def create_chart_by_prompt(body:TextPrompt):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model created wrong json")
     dataset_result=main_app.connector.create_dataset(result_json["sql"],result_json["table_names"])
+    table_source=main_app.connector.get_table(result_json["table_names"][0])
+    database_id=table_source["database"]["id"]
+    sql_result=main_app.connector.execute_sql_query(result_json["sql"],database_id)
     if dataset_result is False:
         raise HTTPException(status_code=500, detail=f"Can't create dataset")
     chart_obj=ChartFactory().create(result_json["data"]["chart"],dataset_result.json()["data"])
     answer=main_app.connector.create_chart(chart_obj.to_json())
     if answer is False:
         raise HTTPException(status_code=500, detail=f"Can't create chart")
+    result_response={"id":answer.json()["id"],"sql":result_json["sql"],"data":sql_result["data"]}
+    
     return Response(
         success=True,
         message="Chart and dataset created successfully",
-        result=answer.json())
+        result=result_response)

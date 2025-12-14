@@ -15,6 +15,9 @@ async def create_dashboard_by_prompt(body:TextPrompt):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model created wrong json")
     dataset_result=main_app.connector.create_dataset(result_json["sql"],result_json["table_names"])
+    table_source=main_app.connector.get_table(result_json["table_names"][0])
+    database_id=table_source["database"]["id"]
+    sql_result=main_app.connector.execute_sql_query(result_json["sql"],database_id)
     if dataset_result is False:
         raise HTTPException(status_code=500, detail=f"Can't create dataset")
     dashboard_obj=DashboardModel() 
@@ -27,7 +30,8 @@ async def create_dashboard_by_prompt(body:TextPrompt):
     dashboard_result=main_app.connector.create_dashboard(dashboard_obj.to_json())
     if dashboard_result is False:
         raise HTTPException(status_code=500, detail=f"Can't create dashboard")
+    result_response={"id":dashboard_result.json()["id"],"sql":result_json["sql"],"data":sql_result["data"]}
     return Response(
         success=True,
         message="Dashboard, charts and dataset created successfully",
-        result=dashboard_result.json())
+        result=result_response)
