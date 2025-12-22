@@ -4,419 +4,760 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Прототип AI Plotter с Голосовым Вводом</title>
+    <title>AI Visualizer - Создание графиков и дашбордов</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --dark-bg: #1e293b;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--text-primary);
             min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
+            max-width: 1400px;
+            margin: 0 auto;
             background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
         }
 
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .input-section {
-            margin-bottom: 25px;
-        }
-
-        .input-group {
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 1.5rem 2rem;
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        input[type="text"] {
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Или более надежный вариант: */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-areas: "creation history";
+            min-height: 800px;
+            overflow: hidden;
+            /* Предотвращает выход за границы */
+        }
+
+        .creation-panel {
+            grid-area: creation;
+            padding: 2rem;
+            border-right: 1px solid var(--border-color);
+            overflow: hidden;
+            /* Важно! */
+        }
+
+        .history-panel {
+            grid-area: history;
+            background: var(--light-bg);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            /* Важно! */
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "creation"
+                    "history";
+            }
+
+            .creation-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .panel-title i {
+            color: var(--primary-color);
+        }
+
+        /* Поле ввода */
+        .input-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .text-input {
             flex: 1;
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        select {
-            padding: 12px 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            background: white;
-        }
-
-        .buttons-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
             transition: all 0.3s ease;
         }
 
-        .process-btn {
-            background: #4CAF50;
-            color: white;
-            flex: 1;
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .process-btn:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-        }
-
-        .record-btn {
-            width: 60px;
-            height: 60px;
+        .voice-btn {
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background: #ff4444;
+            background: var(--error-color);
             color: white;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            font-size: 12px;
-            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.25rem;
         }
 
-        .record-btn:hover {
+        .voice-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.6);
+            box-shadow: var(--shadow-md);
         }
 
-        .record-btn.recording {
-            background: #4444ff;
-            box-shadow: 0 4px 15px rgba(68, 68, 255, 0.4);
+        .voice-btn.recording {
+            background: var(--info-color);
             animation: pulse 1.5s infinite;
         }
 
-        .record-btn.recording:hover {
-            box-shadow: 0 6px 20px rgba(68, 68, 255, 0.6);
+        /* Таймер записи */
+        .recording-timer {
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            display: none;
         }
 
-        .record-icon {
-            font-size: 20px;
-            margin-bottom: 2px;
+        /* Настройки */
+        .settings-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .select-wrapper {
+            flex: 1;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .create-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .create-btn:hover {
+            background: #0da271;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .create-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Статус */
+        .status-container {
+            margin: 1.5rem 0;
+            min-height: 60px;
         }
 
         .status {
-            margin: 15px 0;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 1rem;
+            border-radius: var(--radius-md);
             border-left: 4px solid;
-            text-align: left;
+            background: var(--light-bg);
         }
 
-        .ready {
-            background-color: #e8f5e8;
-            border-color: #2e7d32;
-            color: #2e7d32;
+        .status.ready {
+            border-color: var(--success-color);
+            background: #f0fdf4;
+            color: #166534;
         }
 
-        .recording-status {
-            background-color: #ffebee;
-            border-color: #d32f2f;
-            color: #d32f2f;
+        .status.recording {
+            border-color: var(--error-color);
+            background: #fef2f2;
+            color: #991b1b;
         }
 
-        .processing {
-            background-color: #e3f2fd;
-            border-color: #1976d2;
-            color: #1976d2;
+        .status.processing {
+            border-color: var(--info-color);
+            background: #eff6ff;
+            color: #1e40af;
         }
 
-        .success {
-            background-color: #e8f5e8;
-            border-color: #2e7d32;
-            color: #2e7d32;
+        .status.error {
+            border-color: var(--error-color);
+            background: #fef2f2;
+            color: #991b1b;
         }
 
-        .error {
-            background-color: #ffebee;
-            border-color: #d32f2f;
-            color: #d32f2f;
+        /* Результаты распознавания */
+        .recognition-result {
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--light-bg);
+            border-radius: var(--radius-md);
+            display: none;
         }
 
-        .result-section {
-            margin: 25px 0;
+        .recognition-result h3 {
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .text-result {
-            font-size: 16px;
-            line-height: 1.6;
-            margin: 15px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border-left: 4px solid #2196f3;
-            min-height: 40px;
+        .recognized-text {
+            padding: 1rem;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
         }
 
-        .audio-player {
-            width: 100%;
-            margin: 15px 0;
-            border-radius: 10px;
+        .recognition-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
-        .info-item {
-            display: inline-block;
-            background: #e3f2fd;
-            padding: 6px 12px;
-            margin: 5px;
-            border-radius: 15px;
-            font-size: 12px;
-            color: #1976d2;
+        .meta-item {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
         }
 
-        .url-result {
-            margin: 15px 0;
-            padding: 15px;
-            background: #e8f5e8;
-            border-radius: 8px;
-            border-left: 4px solid #4CAF50;
+        /* Результат создания */
+        .creation-result {
+            margin-top: 2rem;
         }
 
-        .url-result a {
-            color: #2196f3;
+        .result-card {
+            background: var(--light-bg);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .result-type {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .result-type.chart {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .result-type.dashboard {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .result-url {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            margin: 1rem 0;
+            word-break: break-all;
+        }
+
+        .result-url a {
+            color: var(--info-color);
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 500;
         }
 
-        .url-result a:hover {
+        .result-url a:hover {
             text-decoration: underline;
         }
 
-        .timer {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-            font-family: monospace;
+        .dashboard-info {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .chart-card {
+            background: #f8fafc;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .chart-card a {
+            color: var(--info-color);
+            text-decoration: none;
+        }
+
+        .chart-card a:hover {
+            text-decoration: underline;
         }
 
         .details-btn {
-            background: #2196f3;
-            color: white;
-            margin: 10px 0;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            width: 100%;
+            padding: 0.875rem;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
         }
 
         .details-btn:hover {
-            background: #1976d2;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+            border-color: var(--primary-color);
+            background: #f8fafc;
         }
 
-        .details-btn .icon {
-            transition: transform 0.3s ease;
-        }
-
-        .details-btn.expanded .icon {
-            transform: rotate(180deg);
-        }
-
+        /* Замените существующий .details-section на: */
         .details-section {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
+            margin-top: 1rem;
+            padding: 1.5rem;
+            background: var(--light-bg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
             display: none;
+            overflow: hidden;
+            /* Важно! */
+        }
+
+        .details-section.visible {
+            display: block;
             animation: slideDown 0.3s ease-out;
         }
 
-        .details-section.expanded {
-            display: block;
-        }
-
-        .sql-section {
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #fff;
-            border-radius: 8px;
-            border-left: 4px solid #4CAF50;
-        }
-
-        .sql-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 14px;
+        .details-section h4 {
+            margin: 0 0 0.75rem 0;
+            color: var(--text-primary);
+            font-size: 1rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
+        }
+
+        .sql-container {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            margin: 1rem 0;
+            overflow-x: auto;
         }
 
         .sql-code {
             font-family: 'Courier New', monospace;
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
             white-space: pre-wrap;
             word-break: break-word;
-            font-size: 14px;
+            font-size: 0.875rem;
             line-height: 1.5;
-            color: #333;
-            border: 1px solid #e0e0e0;
         }
 
-        .data-section {
-            margin-top: 20px;
-        }
-
-        .data-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .data-table-container {
-            width: 100%;
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            background: white;
-            margin-top: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        /* Замените существующий .data-table-container на: */
+        .data-table-container.scrollable-container {
             max-height: 400px;
-            overflow-y: auto;
+            max-width: 100%;
+            overflow: scroll;
+            margin: 1rem 0;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
         }
 
+        /* Добавьте новые стили для таблицы: */
         .data-table {
+            min-width: 600px;
+            max-width: 100px;
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
-            /* Минимальная ширина для небольших таблиц */
+            overflow-x: scroll;
         }
 
         .data-table th {
-            background: #2196f3;
-            color: white;
-            font-weight: bold;
-            padding: 12px 15px;
+            background: #f1f5f9;
+            padding: 0.875rem;
             text-align: left;
-            font-size: 14px;
-            border-bottom: 2px solid #1976d2;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
             position: sticky;
             top: 0;
-            z-index: 10;
+            white-space: nowrap;
         }
 
         .data-table td {
-            padding: 10px 15px;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 14px;
-            vertical-align: top;
-            min-width: 100px;
-            /* Минимальная ширина ячейки */
-        }
-
-        .data-table tr:nth-child(even) {
-            background-color: #f8f9fa;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
         }
 
         .data-table tr:hover {
-            background-color: #e3f2fd;
+            background: #f8fafc;
         }
 
-        .data-table tr:last-child td {
+        /* Для SQL контейнера: */
+        .sql-container.scrollable-container {
+            max-height: 200px;
+            max-width: 100%;
+            overflow: auto;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .sql-code {
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Панель истории */
+        .history-panel {
+            background: var(--light-bg);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .history-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn:hover {
+            background: #f1f5f9;
+            color: var(--text-primary);
+        }
+
+        .icon-btn.danger:hover {
+            background: #fef2f2;
+            color: var(--error-color);
+            border-color: var(--error-color);
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .history-empty i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .history-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: #f8fafc;
+        }
+
+        .history-item:last-child {
             border-bottom: none;
         }
 
-        .no-data {
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px dashed #ccc;
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
         }
 
-        .hidden {
-            display: none;
+        .history-item-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+            margin-right: 1rem;
         }
 
-        /* Стили для скроллбара */
-        .data-table-container::-webkit-scrollbar {
-            height: 8px;
-            width: 8px;
+        .history-item-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
         }
 
-        .data-table-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
+        .history-item-prompt {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .data-table-container::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
+        .history-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .data-table-container::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .history-item-id {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: #f1f5f9;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
         }
 
-        .sql-code::-webkit-scrollbar {
-            height: 6px;
+        .history-item-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
-        .sql-code::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
+        .small-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
         }
 
-        .sql-code::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
+        .small-btn:hover {
+            background: #f1f5f9;
         }
 
-        .sql-code::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .small-btn.restore:hover {
+            background: #f0fdf4;
+            color: var(--success-color);
+            border-color: var(--success-color);
         }
 
+        .small-btn.delete:hover {
+            background: #fef2f2;
+            color: var(--error-color);
+            border-color: var(--error-color);
+        }
+
+        .session-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        .session-info h4 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Анимации */
         @keyframes pulse {
             0% {
-                box-shadow: 0 0 0 0 rgba(68, 68, 255, 0.7);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
             }
 
             70% {
-                box-shadow: 0 0 0 10px rgba(68, 68, 255, 0);
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
             }
 
             100% {
-                box-shadow: 0 0 0 0 rgba(68, 68, 255, 0);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
             }
         }
 
@@ -431,129 +772,338 @@
                 transform: translateY(0);
             }
         }
+
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            background: white;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error-color);
+        }
+
+        .notification.info {
+            border-left: 4px solid var(--info-color);
+        }
+
+        .notification-icon {
+            font-size: 1.25rem;
+        }
+
+        .notification.success .notification-icon {
+            color: var(--success-color);
+        }
+
+        .notification.error .notification-icon {
+            color: var(--error-color);
+        }
+
+        .notification.info .notification-icon {
+            color: var(--info-color);
+        }
+
+        /* Аудио плеер */
+        .audio-player {
+            width: 100%;
+            margin: 1rem 0;
+            border-radius: var(--radius-md);
+        }
+
+        /* Прокручиваемые контейнеры */
+        .scrollable-container {
+            max-height: 400px;
+            overflow: auto;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .sql-container.scrollable-container {
+            max-height: 200px;
+            margin: 1rem 0;
+            padding: 1rem;
+        }
+
+        .data-table-container.scrollable-container {
+            max-height: 400px;
+            margin: 1rem 0;
+        }
+
+        /* Полоса прокрутки */
+        .scrollable-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .scrollable-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Стили для ссылок в истории */
+        .history-item-id a {
+            color: var(--info-color);
+            text-decoration: none;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .history-item-id a:hover {
+            text-decoration: underline;
+        }
+
+        /* Подсказка для полного текста */
+        .history-item-prompt {
+            cursor: help;
+        }
+
+        /* Анимация для раскрытия деталей */
+        .history-details {
+            animation: slideDown 0.3s ease-out;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>Прототип</h1>
-
-        <div class="input-section">
-            <div class="input-group">
-                <input type="text" id="inputData" placeholder="Введите запрос или используйте голосовой ввод...">
-                <button id="recordBtn" class="record-btn" title="Голосовой ввод">
-                    <span class="record-icon">🎤</span>
-                    <span>Запись</span>
+        <!-- Шапка -->
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> AI Visualizer</h1>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="loadHistory()" title="Обновить историю">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="icon-btn danger" onclick="clearHistory()" title="Очистить историю">
+                    <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
-
-            <div id="timer" class="timer hidden">00:00</div>
-
-            <div class="input-group">
-                <select name="type">
-                    <option value="charts">Chart</option>
-                    <option value="dashboards">Dashboard</option>
-                </select>
-                <button class="process-btn" onclick="process()">Создать Визуализацию</button>
-            </div>
         </div>
 
-        <div id="status" class="status ready">
-            <strong>Готов к записи</strong><br>
-            Нажмите кнопку микрофона для голосового ввода
-        </div>
-
-        <audio id="audioPlayer" class="audio-player" controls style="display: none;"></audio>
-
-        <div id="speechResult" class="result-section" style="display: none;">
-            <h3>🎤 Распознанный текст:</h3>
-            <div id="recognizedText" class="text-result">
-                Идет обработка...
-            </div>
-            <div id="recognitionInfo"></div>
-        </div>
-
-        <div id="plotterResult" class="result-section"></div>
-
-        <!-- Секция с подробностями (изначально скрыта) -->
-        <div id="detailsSection" class="details-section">
-            <div class="sql-section">
-                <div class="sql-title">
-                    <span>📝 Сгенерированный SQL запрос:</span>
+        <!-- Основное содержимое -->
+        <div class="main-content">
+            <!-- Левая панель: Создание -->
+            <div class="creation-panel">
+                <div class="panel-title">
+                    <i class="fas fa-magic"></i>
+                    <span>Создание визуализации</span>
                 </div>
-                <pre id="sqlCode" class="sql-code">SQL запрос появится здесь...</pre>
+
+                <!-- Поле ввода -->
+                <div class="input-container">
+                    <label class="input-label">Введите запрос для визуализации:</label>
+                    <div class="input-with-button">
+                        <input type="text" id="inputData" class="text-input"
+                            placeholder="Например: 'Покажи продажи по месяцам за последний год'">
+                        <button id="voiceBtn" class="voice-btn" title="Голосовой ввод">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <div id="recordingTimer" class="recording-timer">00:00</div>
+                </div>
+
+                <!-- Настройки -->
+                <div class="settings-group">
+                    <div class="select-wrapper">
+                        <label class="input-label">Тип визуализации:</label>
+                        <select id="visualizationType">
+                            <option value="charts">📊 График</option>
+                            <option value="dashboards">📈 Дашборд</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Кнопка создания -->
+                <button id="createBtn" class="create-btn">
+                    <i class="fas fa-plus-circle"></i>
+                    Создать визуализацию
+                </button>
+
+                <!-- Статус -->
+                <div class="status-container">
+                    <div id="status" class="status ready">
+                        <strong><i class="fas fa-check-circle"></i> Готов</strong>
+                        <p>Введите запрос или нажмите кнопку микрофона для голосового ввода</p>
+                    </div>
+                </div>
+
+                <!-- Аудио плеер -->
+                <audio id="audioPlayer" class="audio-player" controls style="display: none;"></audio>
+
+                <!-- Результат распознавания -->
+                <div id="recognitionResult" class="recognition-result">
+                    <h3><i class="fas fa-comment-dots"></i> Распознанный текст:</h3>
+                    <div id="recognizedText" class="recognized-text">
+                        Текст появится здесь после распознавания...
+                    </div>
+                    <div id="recognitionMeta" class="recognition-meta">
+                        <!-- Мета-информация о распознавании -->
+                    </div>
+                </div>
+
+                <!-- Результат создания -->
+                <div id="creationResult" class="creation-result">
+                    <!-- Результаты будут добавляться сюда -->
+                </div>
             </div>
 
-            <div class="data-section">
-                <div class="data-title">
-                    <span>📊 Результаты запроса:</span>
+            <!-- Правая панель: История -->
+            <div class="history-panel">
+                <div class="history-header">
+                    <h2 class="history-title">
+                        <i class="fas fa-history"></i> История запросов
+                    </h2>
+                    <div class="history-controls">
+                        <button class="icon-btn" onclick="loadHistory()" title="Обновить">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="icon-btn danger" onclick="clearHistory()" title="Очистить историю">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </div>
-                <div id="dataTableContainer" class="data-table-container">
-                    <!-- Таблица будет вставлена сюда -->
+
+                <!-- Список истории -->
+                <div id="historyList" class="history-list">
+                    <div class="history-empty">
+                        <i class="fas fa-history"></i>
+                        <p>История запросов пуста</p>
+                        <small>Создайте первую визуализацию</small>
+                    </div>
+                </div>
+
+                <!-- Информация о сессии -->
+                <div id="sessionInfo" class="session-info">
+                    <h4><i class="fas fa-info-circle"></i> Информация о сессии</h4>
+                    <div class="session-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-hashtag"></i>
+                            <span>ID:</span>
+                            <span id="sessionId" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-list-alt"></i>
+                            <span>Запросов:</span>
+                            <span id="historyCount" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Создана:</span>
+                            <span id="sessionCreated" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Активность:</span>
+                            <span id="lastActivity" class="stat-value">-</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Скрипт -->
     <script>
-        // Конфигурационные параметры из сервера
+        // Конфигурация
         const config = {
-            baseUrl: "{{ base_url }}"
+            baseUrl: "{{ base_url }}",
+            endpoints: {
+                charts: '/charts/create/text',
+                dashboards: '/dashboards/create/text',
+                history: '/charts/history',
+                deleteHistoryItem: '/charts/history',
+                clearHistory: '/charts/history',
+                sessionInfo: '/charts/session/info',
+                recognize: '/main/recognize'
+            }
         };
 
-        class SpeechRecognitionApp {
+        class AIVisualizer {
             constructor() {
                 this.mediaRecorder = null;
                 this.audioChunks = [];
                 this.isRecording = false;
                 this.recordingTimer = null;
                 this.recordingStartTime = null;
+                this.currentHistory = [];
 
                 this.initializeElements();
                 this.initializeEventListeners();
-                //this.checkBackendStatus();
+                this.loadHistory();
             }
 
             initializeElements() {
-                this.recordBtn = document.getElementById('recordBtn');
+                // Элементы ввода
                 this.inputData = document.getElementById('inputData');
-                this.timer = document.getElementById('timer');
+                this.voiceBtn = document.getElementById('voiceBtn');
+                this.recordingTimer = document.getElementById('recordingTimer');
+                this.visualizationType = document.getElementById('visualizationType');
+                this.createBtn = document.getElementById('createBtn');
+
+                // Элементы статуса
                 this.status = document.getElementById('status');
+
+                // Элементы результатов
                 this.audioPlayer = document.getElementById('audioPlayer');
-                this.speechResult = document.getElementById('speechResult');
+                this.recognitionResult = document.getElementById('recognitionResult');
                 this.recognizedText = document.getElementById('recognizedText');
-                this.recognitionInfo = document.getElementById('recognitionInfo');
-                this.plotterResult = document.getElementById('plotterResult');
-                this.detailsSection = document.getElementById('detailsSection');
-                this.sqlCode = document.getElementById('sqlCode');
-                this.dataTableContainer = document.getElementById('dataTableContainer');
+                this.recognitionMeta = document.getElementById('recognitionMeta');
+                this.creationResult = document.getElementById('creationResult');
+
+                // Элементы истории
+                this.historyList = document.getElementById('historyList');
+                this.sessionInfo = document.getElementById('sessionInfo');
+                this.sessionId = document.getElementById('sessionId');
+                this.historyCount = document.getElementById('historyCount');
+                this.sessionCreated = document.getElementById('sessionCreated');
+                this.lastActivity = document.getElementById('lastActivity');
             }
 
-            async initializeEventListeners() {
-                this.recordBtn.addEventListener('click', () => this.toggleRecording());
-                await this.checkMicrophonePermission();
-            }
+            initializeEventListeners() {
+                // Голосовой ввод
+                this.voiceBtn.addEventListener('click', () => this.toggleRecording());
 
-            async checkBackendStatus() {
-                try {
-                    const response = await fetch('/recognition-status/');
-                    const status = await response.json();
-
-                    if (status.status !== 'active') {
-                        this.updateStatus('❌ Голосовой ввод временно недоступен', 'error');
-                        this.recordBtn.disabled = true;
+                // Ввод по Enter
+                this.inputData.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.processRequest();
                     }
-                } catch (error) {
-                    this.updateStatus('⚠️ Голосовой ввод не доступен', 'error');
-                }
+                });
+                this.createBtn.addEventListener('click', () => this.processRequest());
+                // Проверка микрофона
+                this.checkMicrophonePermission();
             }
 
             async checkMicrophonePermission() {
                 try {
                     await navigator.mediaDevices.getUserMedia({ audio: true });
                 } catch (error) {
-                    this.updateStatus('❌ Нет доступа к микрофону. Разрешите доступ к микрофону в настройках браузера.', 'error');
-                    this.recordBtn.disabled = true;
+                    this.showNotification('Нет доступа к микрофону. Разрешите доступ в настройках браузера.', 'error');
+                    this.voiceBtn.disabled = true;
                 }
             }
 
@@ -596,18 +1146,18 @@
                     this.mediaRecorder.start(1000);
                     this.isRecording = true;
 
-                    // Обновляем UI
-                    this.recordBtn.classList.add('recording');
-                    this.recordBtn.innerHTML = '<span class="record-icon">⏹️</span><span>Стоп</span>';
-                    this.timer.classList.remove('hidden');
+                    // Обновление UI
+                    this.voiceBtn.classList.add('recording');
+                    this.voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                    this.recordingTimer.style.display = 'block';
 
-                    // Очищаем предыдущие результаты
-                    this.plotterResult.innerHTML = '';
+                    // Очистка предыдущих результатов
+                    this.creationResult.innerHTML = '';
 
-                    // Запускаем таймер
+                    // Запуск таймера
                     this.startTimer();
 
-                    this.updateStatus('🔴 Запись... Говорите ваш запрос для визуализации', 'recording-status');
+                    this.updateStatus('Запись... Говорите ваш запрос', 'recording');
 
                 } catch (error) {
                     this.updateStatus('Ошибка начала записи: ' + error.message, 'error');
@@ -619,50 +1169,51 @@
                     this.mediaRecorder.stop();
                     this.isRecording = false;
 
-                    // Останавливаем таймер
+                    // Остановка таймера
                     this.stopTimer();
 
-                    // Обновляем UI
-                    this.recordBtn.classList.remove('recording');
-                    this.recordBtn.innerHTML = '<span class="record-icon">🎤</span><span>Запись</span>';
-                    this.recordBtn.disabled = true;
+                    // Обновление UI
+                    this.voiceBtn.classList.remove('recording');
+                    this.voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                    this.voiceBtn.disabled = true;
 
-                    this.updateStatus('⏳ Обработка записи...', 'processing');
+                    this.updateStatus('Обработка записи...', 'processing');
                 }
             }
 
             startTimer() {
                 this.recordingStartTime = Date.now();
-                this.recordingTimer = setInterval(() => {
+                this.recordingTimerInterval = setInterval(() => {
                     const elapsed = Date.now() - this.recordingStartTime;
                     const seconds = Math.floor(elapsed / 1000);
                     const minutes = Math.floor(seconds / 60);
                     const displaySeconds = seconds % 60;
-                    this.timer.textContent = `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+                    this.recordingTimer.textContent =
+                        `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
                 }, 1000);
             }
 
             stopTimer() {
-                if (this.recordingTimer) {
-                    clearInterval(this.recordingTimer);
-                    this.recordingTimer = null;
+                if (this.recordingTimerInterval) {
+                    clearInterval(this.recordingTimerInterval);
+                    this.recordingTimerInterval = null;
                 }
-                this.timer.classList.add('hidden');
+                this.recordingTimer.style.display = 'none';
             }
 
             processRecording() {
                 const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
 
-                // Воспроизводим записанное аудио
+                // Воспроизведение аудио
                 const audioUrl = URL.createObjectURL(audioBlob);
                 this.audioPlayer.src = audioUrl;
                 this.audioPlayer.style.display = 'block';
 
-                // Показываем результат распознавания
-                this.speechResult.style.display = 'block';
+                // Показ результата распознавания
+                this.recognitionResult.style.display = 'block';
                 this.recognizedText.textContent = 'Идет распознавание...';
 
-                // Отправляем на распознавание
+                // Отправка на распознавание
                 this.recognizeSpeech(audioBlob);
             }
 
@@ -671,7 +1222,7 @@
                     const formData = new FormData();
                     formData.append('file', audioBlob);
 
-                    const response = await fetch('/main/recognize', {
+                    const response = await fetch(config.endpoints.recognize, {
                         method: 'POST',
                         body: formData
                     });
@@ -684,12 +1235,10 @@
                     this.displayRecognitionResult(result);
 
                 } catch (error) {
-                    this.updateStatus('❌ Ошибка распознавания: ' + error.message, 'error');
+                    this.updateStatus('Ошибка распознавания: ' + error.message, 'error');
                     this.recognizedText.textContent = 'Произошла ошибка при распознавании речи.';
-                    console.error('Recognition error:', error);
                 } finally {
-                    // Включаем кнопку обратно
-                    this.recordBtn.disabled = false;
+                    this.voiceBtn.disabled = false;
                 }
             }
 
@@ -698,83 +1247,206 @@
                     const recognizedText = result.text;
                     this.recognizedText.textContent = recognizedText;
 
-                    // ЗАПИСЫВАЕМ РАСПОЗНАННЫЙ ТЕКСТ В ПОЛЕ ВВОДА
+                    // Запись в поле ввода
                     this.inputData.value = recognizedText;
 
-                    this.updateStatus('✅ Текст распознан и записан в поле ввода', 'success');
+                    this.updateStatus('Текст распознан и записан в поле ввода', 'ready');
 
-                    this.recognitionInfo.innerHTML = `
-                        <div class="info-item">
-                            📊 Размер: ${Math.round(result.file_size / 1024)} KB
+                    // Отображение мета-информации
+                    this.recognitionMeta.innerHTML = `
+                        <div class="meta-item">
+                            <i class="fas fa-weight-hanging"></i> Размер: ${Math.round(result.file_size / 1024)} KB
                         </div>
-                        <div class="info-item">
-                            ⚡ Распознаватель: ${result.recognizer || 'Vosk'}
+                        <div class="meta-item">
+                            <i class="fas fa-microchip"></i> Модель: ${result.recognizer || 'Vosk'}
                         </div>
                     `;
 
-                    // Автоматически фокусируемся на поле ввода для возможного редактирования
+                    // Фокус на поле ввода
                     this.inputData.focus();
 
                 } else {
                     this.recognizedText.textContent = 'Речь не распознана. Попробуйте говорить четче и громче.';
-                    this.updateStatus('⚠️ Речь не распознана', 'error');
+                    this.updateStatus('Речь не распознана', 'error');
                 }
             }
 
-            updateStatus(message, type = 'ready') {
-                this.status.innerHTML = message;
-                this.status.className = `status ${type}`;
-            }
+            async processRequest() {
+                const input = this.inputData.value.trim();
+                const type = this.visualizationType.value;
 
-            // Новый метод для отображения деталей результата
-            displayDetails(result) {
-                // Отображаем SQL запрос
-                this.sqlCode.textContent = result.sql || 'SQL запрос не сгенерирован';
-
-                // Отображаем таблицу с данными
-                this.displayDataTable(result.data || []);
-            }
-
-            displayDataTable(data) {
-                if (!data || data.length === 0) {
-                    this.dataTableContainer.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+                if (!input) {
+                    this.showNotification('Введите запрос для создания визуализации', 'error');
                     return;
                 }
 
-                // Получаем все уникальные ключи из объектов данных
-                const keys = Array.from(
-                    new Set(data.flatMap(item => Object.keys(item)))
-                );
+                // Блокировка кнопки
+                this.createBtn.disabled = true;
+                this.createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
 
-                // Создаем таблицу
-                let tableHTML = '<table class="data-table">';
+                this.updateStatus('Создание визуализации...', 'processing');
 
-                // Заголовки таблицы
-                tableHTML += '<thead><tr>';
+                try {
+                    const endpoint = type === 'charts' ? config.endpoints.charts : config.endpoints.dashboards;
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: input })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.displayCreationResult(result, type);
+                        await this.loadHistory();
+                        this.showNotification(
+                            `${type === 'charts' ? 'График' : 'Дашборд'} создан успешно!`,
+                            'success'
+                        );
+                    } else {
+                        throw new Error(result.detail || 'Неизвестная ошибка');
+                    }
+
+                } catch (error) {
+                    this.showNotification(`Ошибка: ${error.message}`, 'error');
+                    this.updateStatus('Ошибка при создании', 'error');
+                } finally {
+                    // Разблокировка кнопки
+                    this.createBtn.disabled = false;
+                    this.createBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Создать визуализацию';
+                }
+            }
+
+            displayCreationResult(result, type) {
+                const isDashboard = type === 'dashboards';
+                const resultData = result.result;
+
+                // Формирование URL
+                let url = config.baseUrl;
+                if (isDashboard) {
+                    url += "/superset/dashboard/" + resultData.id;
+                } else {
+                    url += "/explore?slice_id=" + resultData.id;
+                }
+
+                // Формирование HTML результата
+                let html = `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-title">
+                                <i class="fas fa-${isDashboard ? 'tachometer-alt' : 'chart-bar'}"></i>
+                                ${isDashboard ? 'Дашборд создан' : 'График создан'}
+                            </div>
+                            <div class="result-type ${isDashboard ? 'dashboard' : 'chart'}">
+                                ${isDashboard ? 'DASHBOARD' : 'CHART'}
+                            </div>
+                        </div>
+                        
+                        <div class="result-url">
+                            <a href="${url}" target="_blank">${url}</a>
+                        </div>
+                `;
+
+                // Дополнительная информация для дашбордов
+                if (isDashboard && resultData.chart_count > 0) {
+                    html += `
+                        <div class="dashboard-info">
+                            <p><strong><i class="fas fa-layer-group"></i> Состав дашборда:</strong></p>
+                            <div class="charts-grid">
+                    `;
+
+                    resultData.chart_ids.forEach((chartId, index) => {
+                        const chartUrl = config.baseUrl + "/explore?slice_id=" + chartId;
+                        html += `
+                            <div class="chart-card">
+                                <strong>График ${index + 1}</strong><br>
+                                <a href="${chartUrl}" target="_blank">${String(chartId).substring(0, 8)}...</a>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Кнопка подробностей
+                html += `
+                            <button class="details-btn" onclick="toggleDetails(this)">
+                                <i class="fas fa-chevron-down"></i>
+                                Показать детали (SQL и данные)
+                            </button>
+                            
+                            <div class="details-section">
+                                <div style="margin-bottom: 1.5rem;">
+                                    <h4><i class="fas fa-code"></i> SQL запрос:</h4>
+                                    <div class="sql-container scrollable-container">
+                                        <pre class="sql-code">${this.escapeHtml(resultData.sql || 'SQL запрос не сгенерирован')}</pre>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4><i class="fas fa-database"></i> Результаты запроса:</h4>
+                                    <div class="data-table-container scrollable-container">
+                `;
+
+                // Таблица данных
+                if (resultData.data && resultData.data.length > 0) {
+                    html += this.generateDataTable(resultData.data);
+                } else {
+                    html += '<p>Нет данных для отображения</p>';
+                }
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Очистка и добавление результата
+                this.creationResult.innerHTML = html;
+                this.updateStatus('Готово', 'ready');
+            }
+            // Добавьте этот метод в класс AIVisualizer:
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            generateDataTable(data) {
+                if (!data || data.length === 0) {
+                    return '<div style="padding: 2rem; text-align: center; color: var(--text-secondary);">Нет данных для отображения</div>';
+                }
+
+                // Получение всех ключей
+                const keys = Array.from(new Set(data.flatMap(item => Object.keys(item))));
+
+                let html = '<table class="data-table"><thead><tr>';
+
+                // Заголовки
                 keys.forEach(key => {
-                    tableHTML += `<th>${this.formatColumnName(key)}</th>`;
+                    html += `<th>${this.formatColumnName(key)}</th>`;
                 });
-                tableHTML += '</tr></thead>';
 
-                // Данные таблицы
-                tableHTML += '<tbody>';
+                html += '</tr></thead><tbody>';
+
+                // Данные
                 data.forEach(item => {
-                    tableHTML += '<tr>';
+                    html += '<tr>';
                     keys.forEach(key => {
                         const value = item[key] !== undefined ? item[key] : '';
-                        // Форматируем значения для лучшего отображения
-                        const formattedValue = this.formatCellValue(value);
-                        tableHTML += `<td>${formattedValue}</td>`;
+                        html += `<td>${this.formatCellValue(value)}</td>`;
                     });
-                    tableHTML += '</tr>';
+                    html += '</tr>';
                 });
-                tableHTML += '</tbody></table>';
 
-                this.dataTableContainer.innerHTML = tableHTML;
+                html += '</tbody></table>';
+                return html;
             }
 
             formatColumnName(name) {
-                // Форматируем имя колонки для лучшего отображения
                 return name
                     .replace(/_/g, ' ')
                     .replace(/([A-Z])/g, ' $1')
@@ -786,103 +1458,325 @@
                 if (value === null || value === undefined) {
                     return '<span style="color: #999; font-style: italic;">null</span>';
                 }
-
                 if (typeof value === 'object') {
                     return JSON.stringify(value);
                 }
-
-                // Если это число с плавающей точкой, округляем до 2 знаков
                 if (typeof value === 'number' && !Number.isInteger(value)) {
                     return value.toFixed(2);
                 }
-
                 return String(value);
+            }
+
+            async loadHistory() {
+                try {
+                    const response = await fetch(config.endpoints.history);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.currentHistory = result.history || [];
+                        this.renderHistory();
+                        this.renderSessionInfo(result);
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки истории:', error);
+                    this.showNotification('Ошибка загрузки истории', 'error');
+                }
+            }
+
+            renderHistory() {
+                if (!this.currentHistory.length) {
+                    this.historyList.innerHTML = `
+                        <div class="history-empty">
+                            <i class="fas fa-history"></i>
+                            <p>История запросов пуста</p>
+                            <small>Создайте первую визуализацию</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+
+                this.currentHistory.forEach(item => {
+                    const date = new Date(item.created_at);
+                    const timeStr = date.toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const dateStr = date.toLocaleDateString('ru-RU');
+                    const isDashboard = item.type === 'dashboard';
+
+                    // Преобразуем result_id в строку для безопасного отображения
+                    const resultIdStr = String(item.result_id);
+                    const shortId = resultIdStr.length > 8 ? resultIdStr.substring(0, 8) + '...' : resultIdStr;
+
+                    // Формируем URL для просмотра
+                    const viewUrl = isDashboard
+                        ? config.baseUrl + "/superset/dashboard/" + resultIdStr
+                        : config.baseUrl + "/explore?slice_id=" + resultIdStr;
+
+                    html += `
+                        <div class="history-item">
+                            <div class="history-item-header">
+                                <div class="history-item-title">
+                                    <i class="fas fa-${isDashboard ? 'tachometer-alt' : 'chart-bar'}"></i>
+                                    ${isDashboard ? 'Дашборд' : 'График'}
+                                </div>
+                                <div class="history-item-time" title="${date.toLocaleString('ru-RU')}">
+                                    ${dateStr} ${timeStr}
+                                </div>
+                            </div>
+                            <div class="history-item-prompt" title="${item.prompt}">
+                                ${item.prompt.length > 80 ? item.prompt.substring(0, 80) + '...' : item.prompt}
+                            </div>
+                            <div class="history-item-footer">
+                                <div class="history-item-id">
+                                    <a href="${viewUrl}" target="_blank" onclick="event.stopPropagation();" title="Открыть в новой вкладке">
+                                        ${shortId}
+                                    </a>
+                                </div>
+                                <div class="history-item-actions">
+                                    <button class="small-btn restore" onclick="event.stopPropagation(); showHistoryDetails('${item.id}')" title="Подробнее">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="small-btn restore" onclick="event.stopPropagation(); restoreFromHistory('${item.id}')" title="Восстановить">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                    <button class="small-btn delete" onclick="event.stopPropagation(); deleteHistoryItem('${item.id}')" title="Удалить">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Детали истории (скрыты по умолчанию) -->
+                            <div class="history-details" id="history-details-${item.id}" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <div style="margin-bottom: 0.75rem;">
+                                    <strong><i class="fas fa-quote-left"></i> Полный текст запроса:</strong>
+                                    <div style="margin-top: 0.5rem; padding: 0.75rem; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                        ${item.prompt}
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 0.75rem;">
+                                    <strong><i class="fas fa-link"></i> Ссылка на результат:</strong>
+                                    <div style="margin-top: 0.5rem; padding: 0.75rem; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color); word-break: break-all;">
+                                        <a href="${viewUrl}" target="_blank">${viewUrl}</a>
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong><i class="fas fa-info-circle"></i> Детали:</strong>
+                                    <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem;">
+                                        <div style="padding: 0.5rem; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                            <small>Тип:</small><br>
+                                            <strong>${isDashboard ? 'Дашборд' : 'График'}</strong>
+                                        </div>
+                                        <div style="padding: 0.5rem; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                            <small>Дата:</small><br>
+                                            <strong>${date.toLocaleDateString('ru-RU')}</strong>
+                                        </div>
+                                        <div style="padding: 0.5rem; background: white; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                            <small>Время:</small><br>
+                                            <strong>${date.toLocaleTimeString('ru-RU')}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 1rem; text-align: center;">
+                                    <button onclick="event.stopPropagation(); closeHistoryDetails('${item.id}')" style="padding: 0.5rem 1rem; background: var(--border-color); border: none; border-radius: var(--radius-sm); cursor: pointer;">
+                                        <i class="fas fa-times"></i> Закрыть
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                this.historyList.innerHTML = html;
+            }
+
+            renderSessionInfo(result) {
+                this.historyCount.textContent = result.count || 0;
+                this.sessionId.textContent = result.session_id ? result.session_id.substring(0, 8) + '...' : '-';
+
+                if (result.session_created) {
+                    const created = new Date(result.session_created);
+                    this.sessionCreated.textContent = created.toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+
+                if (result.last_activity) {
+                    const lastActivity = new Date(result.last_activity);
+                    this.lastActivity.textContent = lastActivity.toLocaleTimeString('ru-RU', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
+
+            async clearHistory() {
+                if (!this.currentHistory.length) {
+                    this.showNotification('История уже пуста', 'info');
+                    return;
+                }
+
+                if (!confirm('Вы уверены, что хотите очистить всю историю запросов?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(config.endpoints.clearHistory, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        await this.loadHistory();
+                        this.showNotification('История очищена', 'success');
+                    }
+                } catch (error) {
+                    this.showNotification('Ошибка очистки истории', 'error');
+                }
+            }
+
+            async deleteHistoryItem(itemId) {
+                if (!confirm('Удалить этот запрос из истории?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${config.endpoints.deleteHistoryItem}/${itemId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        await this.loadHistory();
+                        this.showNotification('Запрос удален из истории', 'success');
+                    }
+                } catch (error) {
+                    this.showNotification('Ошибка удаления записи', 'error');
+                }
+            }
+
+            updateStatus(message, type = 'ready') {
+                const icons = {
+                    ready: 'fa-check-circle',
+                    recording: 'fa-microphone',
+                    processing: 'fa-spinner fa-spin',
+                    error: 'fa-exclamation-circle'
+                };
+
+                const texts = {
+                    ready: 'Готов',
+                    recording: 'Запись...',
+                    processing: 'Обработка...',
+                    error: 'Ошибка'
+                };
+
+                this.status.className = `status ${type}`;
+                this.status.innerHTML = `
+                    <strong><i class="fas ${icons[type]}"></i> ${texts[type]}</strong>
+                    <p>${message}</p>
+                `;
+            }
+
+            showNotification(message, type = 'info') {
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    info: 'fa-info-circle'
+                };
+
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.innerHTML = `
+                    <i class="fas ${icons[type]} notification-icon"></i>
+                    <div>${message}</div>
+                `;
+
+                document.body.appendChild(notification);
+
+                // Удаление через 5 секунд
+                setTimeout(() => {
+                    notification.remove();
+                }, 5000);
             }
         }
 
-        // Функция для создания визуализации
-        async function process() {
-            const input = document.getElementById('inputData').value;
-            const type = document.querySelector('select[name="type"]').value;
-            const plotterResult = document.getElementById('plotterResult');
-            const detailsSection = document.getElementById('detailsSection');
-            const speechRecognitionApp = window.speechRecognitionApp;
+        // Глобальные функции
+        function toggleDetails(button) {
+            const detailsSection = button.nextElementSibling;
+            const icon = button.querySelector('i');
 
-            if (!input.trim()) {
-                plotterResult.innerHTML = '<div class="status error">Введите запрос для создания визуализации</div>';
-                return;
+            detailsSection.classList.toggle('visible');
+
+            if (detailsSection.classList.contains('visible')) {
+                icon.className = 'fas fa-chevron-up';
+                button.querySelector('span').textContent = 'Скрыть детали';
+            } else {
+                icon.className = 'fas fa-chevron-down';
+                button.querySelector('span').textContent = 'Показать детали (SQL и данные)';
             }
+        }
+        // Глобальные функции для управления деталями истории
+        function showHistoryDetails(itemId) {
+            const detailsElement = document.getElementById(`history-details-${itemId}`);
+            if (detailsElement) {
+                detailsElement.style.display = 'block';
 
-            // Скрываем детали при новом запросе
-            detailsSection.classList.remove('expanded');
-
-            plotterResult.innerHTML = '<div class="status processing">Создание визуализации...</div>';
-
-            try {
-                const response = await fetch('/' + type + '/create/text', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: input })
+                // Закрываем другие открытые детали
+                document.querySelectorAll('.history-details').forEach(element => {
+                    if (element.id !== `history-details-${itemId}`) {
+                        element.style.display = 'none';
+                    }
                 });
-                const result = await response.json();
-
-                if (result.success) {
-                    // Формируем ссылку на основе конфига
-                    let url = config.baseUrl;
-                    if (type === 'charts') {
-                        url += "/explore?slice_id=";
-                    } else {
-                        url += "/superset/dashboard/";
-                    }
-                    url += result.result["id"];
-
-                    // Основная информация о визуализации
-                    plotterResult.innerHTML = `
-                        <div class="url-result">
-                            <strong>✅ Визуализация создана успешно!</strong><br>
-                            <a href="${url}" target="_blank">${url}</a>
-                        </div>
-                        <button id="showDetailsBtn" class="details-btn">
-                            <span class="icon">▼</span>
-                            <span>Подробнее</span>
-                        </button>
-                    `;
-
-                    // Отображаем детали (SQL и данные)
-                    if (speechRecognitionApp) {
-                        speechRecognitionApp.displayDetails(result.result);
-                    }
-
-                    // Добавляем обработчик для кнопки "Подробнее"
-                    const showDetailsBtn = document.getElementById('showDetailsBtn');
-                    showDetailsBtn.addEventListener('click', () => {
-                        detailsSection.classList.toggle('expanded');
-                        showDetailsBtn.classList.toggle('expanded');
-                        showDetailsBtn.querySelector('.icon').textContent =
-                            detailsSection.classList.contains('expanded') ? '▲' : '▼';
-                        showDetailsBtn.querySelector('span:last-child').textContent =
-                            detailsSection.classList.contains('expanded') ? 'Скрыть детали' : 'Подробнее';
-                    });
-
-                } else {
-                    plotterResult.innerHTML = `
-                        <div class="status error">
-                            Ошибка: ${result.detail || 'Неизвестная ошибка'}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                plotterResult.innerHTML = `
-                    <div class="status error">
-                        Ошибка сети: ${error.message}
-                    </div>
-                `;
             }
+        }
+
+        function closeHistoryDetails(itemId) {
+            const detailsElement = document.getElementById(`history-details-${itemId}`);
+            if (detailsElement) {
+                detailsElement.style.display = 'none';
+            }
+        }
+
+        // Обновите функцию restoreFromHistory для закрытия деталей
+        function restoreFromHistory(historyItemId) {
+            const app = window.aiVisualizer;
+            const item = app.currentHistory.find(h => h.id === historyItemId);
+
+            if (item) {
+                app.inputData.value = item.prompt;
+                app.visualizationType.value = item.type === 'dashboard' ? 'dashboards' : 'charts';
+                app.inputData.focus();
+
+                // Закрываем детали если они открыты
+                closeHistoryDetails(historyItemId);
+
+                app.showNotification('Запрос восстановлен в поле ввода', 'success');
+            }
+        }
+
+        // Обновите функцию deleteHistoryItem для закрытия деталей
+        function deleteHistoryItem(itemId) {
+            // Закрываем детали перед удалением
+            closeHistoryDetails(itemId);
+            window.aiVisualizer.deleteHistoryItem(itemId);
+        }
+
+        function clearHistory() {
+            window.aiVisualizer.clearHistory();
+        }
+
+        function loadHistory() {
+            window.aiVisualizer.loadHistory();
         }
 
         // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
-            window.speechRecognitionApp = new SpeechRecognitionApp();
+            window.aiVisualizer = new AIVisualizer();
         });
     </script>
 </body>

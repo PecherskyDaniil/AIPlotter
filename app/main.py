@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 from src.api import chart_router
 from src.api import dashboard_router
 from src.api import main_router
+from src.api import history as history_router
 settings_manager=SettingsManager()
 settings_manager.filename="config.ini"
 settings_manager.load()
@@ -56,8 +57,9 @@ async def index(request: Request):
         }
     )
 
-fastapi_app.include_router(chart_router.router)
-fastapi_app.include_router(dashboard_router.router)
+fastapi_app.include_router(chart_router.charts_router)
+fastapi_app.include_router(dashboard_router.dashboards_router)
+fastapi_app.include_router(history_router.charts_router)
 fastapi_app.include_router(main_router.router)
 #data=ai_parse("4")
 #result=app.connector.create_dataset(data["sql"],data["table_names"])
